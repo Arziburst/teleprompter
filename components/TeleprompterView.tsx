@@ -478,10 +478,10 @@ export const TeleprompterView: FC<TeleprompterViewProps> = ({
         {flashType && (
           <div
             key={`${flashType}-${flashValue ?? ""}`}
-            className={`teleprompter-flash-icon pointer-events-none fixed left-1/2 top-1/2 z-50 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 rounded-xl ${
+            className={`teleprompter-flash-icon pointer-events-none fixed left-1/2 top-1/2 z-50 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 rounded-xl text-emerald-500 ${
               isDark
-                ? "bg-slate-900/55 text-slate-100 shadow-black/30"
-                : "bg-white/60 text-slate-800 shadow-slate-400/40"
+                ? "bg-slate-900/55 shadow-black/30"
+                : "bg-white/60 shadow-slate-400/40"
             } px-3 py-2.5 shadow-xl backdrop-blur-sm`}
             aria-hidden
           >
