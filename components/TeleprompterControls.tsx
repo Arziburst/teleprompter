@@ -21,6 +21,7 @@ type TeleprompterControlsProps = {
   progressPercent: number;
   isFullscreen: boolean;
   isMobile: boolean;
+  theme: "dark" | "light";
 };
 
 export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
@@ -43,7 +44,8 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
   fontSize,
   progressPercent,
   isFullscreen,
-  isMobile
+  isMobile,
+  theme
 }) => {
   const formatTime = (seconds: number) => {
     const safe = Math.max(0, Math.floor(seconds));
@@ -140,16 +142,32 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
     };
   }, [isSeeking, onSeekEnd]);
 
+  const rootBgClass =
+    theme === "dark"
+      ? "bg-black/80 text-slate-50"
+      : "bg-white/95 text-slate-900 shadow-slate-300/70";
+
+  const isLight = theme === "light";
+  const timeClass = isLight ? "text-slate-700" : "text-slate-300";
+  const barTrackClass = isLight ? "bg-slate-300" : "bg-slate-800";
+  const borderClass = isLight ? "border-slate-300" : "border-slate-600";
+  const btnSecondaryClass = isLight
+    ? "text-slate-900 hover:text-emerald-600 hover:bg-emerald-50/80"
+    : "text-slate-200 hover:bg-slate-800";
+  const labelClass = isLight ? "text-slate-700" : "text-slate-200";
+
   return (
-    <div className="pointer-events-auto w-full max-w-5xl rounded-t-xl bg-black/70 px-2 py-3 text-sm text-slate-50 shadow-2xl backdrop-blur">
+    <div
+      className={`pointer-events-auto w-full max-w-5xl rounded-xl px-2 py-3 text-sm shadow-2xl backdrop-blur ${rootBgClass}`}
+    >
       <div className="mb-3 flex h-3 w-full items-center gap-2">
-        <div className="text-[11px] text-slate-300 text-right">
+        <div className={`text-[11px] text-right ${timeClass}`}>
           <span className="font-semibold">{displayLeftLabel}</span>
         </div>
         <div className="relative flex h-3 flex-1 items-center">
           <div
             ref={barRef}
-            className="h-1.5 w-full cursor-pointer overflow-hidden rounded-full bg-slate-800"
+            className={`h-1.5 w-full cursor-pointer overflow-hidden rounded-full ${barTrackClass}`}
           onMouseDown={(event) => {
             setIsSeeking(true);
             onSeekStart();
@@ -224,7 +242,7 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
           </div>
           {hoverPercent != null && (
             <div
-              className="pointer-events-none absolute -top-4 text-[10px] text-slate-100"
+              className={`pointer-events-none absolute -top-4 text-[10px] ${isLight ? "text-slate-800" : "text-slate-100"}`}
               style={{
                 left: `${Math.min(100, Math.max(0, hoverPercent))}%`,
                 transform: "translateX(-50%)"
@@ -239,7 +257,7 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
             </div>
           )}
         </div>
-        <div className="text-[11px] text-slate-300">
+        <div className={`text-[11px] ${timeClass}`}>
           <span className="font-semibold">{totalLabel}</span>
         </div>
       </div>
@@ -257,56 +275,56 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
               ? "Pause (Space)"
               : "Start (Space)"}
         </button>
-        <div className="flex items-center overflow-hidden rounded-full border border-slate-600">
+        <div className={`flex items-center overflow-hidden rounded-full border ${borderClass}`}>
           <button
             type="button"
             onClick={() => onNudgeBySeconds(-nudgeSeconds)}
-            className="border-r border-slate-600 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-800"
+            className={`border-r ${borderClass} px-2.5 py-1.5 text-xs font-medium transition-colors ${btnSecondaryClass}`}
           >
             ← 1s
           </button>
           <button
             type="button"
             onClick={() => onNudgeBySeconds(nudgeSeconds)}
-            className="px-2.5 py-1.5 text-xs font-medium hover:bg-slate-800"
+            className={`px-2.5 py-1.5 text-xs font-medium transition-colors ${btnSecondaryClass}`}
           >
             → 1s
           </button>
         </div>
-        <div className="flex items-center overflow-hidden rounded-full border border-slate-600">
+        <div className={`flex items-center overflow-hidden rounded-full border ${borderClass}`}>
           <button
             type="button"
             onClick={onSlower}
-            className="border-r border-slate-600 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-800"
+            className={`border-r ${borderClass} px-2.5 py-1.5 text-xs font-medium transition-colors ${btnSecondaryClass}`}
           >
             {isMobile ? "Slower" : "Slower (↓)"}
           </button>
-          <span className="min-w-[2.75rem] px-2 text-center text-[11px] font-semibold text-slate-200">
+          <span className={`min-w-[2.75rem] px-2 text-center text-[11px] font-semibold ${labelClass}`}>
             {speed.toFixed(1)}x
           </span>
           <button
             type="button"
             onClick={onFaster}
-            className="border-l border-slate-600 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-800"
+            className={`border-l ${borderClass} px-2.5 py-1.5 text-xs font-medium transition-colors ${btnSecondaryClass}`}
           >
             {isMobile ? "Faster" : "Faster (↑)"}
           </button>
         </div>
-        <div className="flex items-center overflow-hidden rounded-full border border-slate-600">
+        <div className={`flex items-center overflow-hidden rounded-full border ${borderClass}`}>
           <button
             type="button"
             onClick={onDecreaseFont}
-            className="border-r border-slate-600 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-800"
+            className={`border-r ${borderClass} px-2.5 py-1.5 text-xs font-medium transition-colors ${btnSecondaryClass}`}
           >
             {isMobile ? "A-" : "A- (-)"}
           </button>
-          <span className="min-w-[2rem] px-2 text-center text-[11px] font-semibold text-slate-200">
+          <span className={`min-w-[2rem] px-2 text-center text-[11px] font-semibold ${labelClass}`}>
             {Math.round(fontSize)}
           </span>
           <button
             type="button"
             onClick={onIncreaseFont}
-            className="border-l border-slate-600 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-800"
+            className={`border-l ${borderClass} px-2.5 py-1.5 text-xs font-medium transition-colors ${btnSecondaryClass}`}
           >
             {isMobile ? "A+" : "A+ (+)"}
           </button>
@@ -314,7 +332,7 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
         <button
           type="button"
           onClick={onResetPosition}
-          className="rounded-full border border-slate-600 px-3 py-1.5 text-xs font-medium hover:bg-slate-800"
+          className={`rounded-full border ${borderClass} px-3 py-1.5 text-xs font-medium transition-colors ${btnSecondaryClass}`}
         >
           {isMobile ? "Reset" : "Reset (R)"}
         </button>
@@ -322,7 +340,7 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
           <button
             type="button"
             onClick={onToggleFullscreen}
-            className="rounded-full border border-slate-600 px-3 py-1.5 text-xs font-medium hover:bg-slate-800"
+            className={`rounded-full border ${borderClass} px-3 py-1.5 text-xs font-medium transition-colors ${btnSecondaryClass}`}
           >
             {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
           </button>
@@ -330,7 +348,7 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
         <button
           type="button"
           onClick={onBackToEdit}
-          className="ml-auto rounded-full border border-slate-600 px-3 py-1.5 text-xs font-medium hover:bg-slate-800"
+          className={`ml-auto rounded-full border ${borderClass} px-3 py-1.5 text-xs font-medium transition-colors ${btnSecondaryClass}`}
         >
           {isMobile ? "Back to Edit" : "Back to Edit (Esc)"}
         </button>

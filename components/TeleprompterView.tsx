@@ -23,6 +23,7 @@ type TeleprompterViewProps = {
   targetDurationMinutes: number;
   initialSpeed: number;
   initialFontSize: number;
+  theme: "dark" | "light";
   onBackToEdit: () => void;
 };
 
@@ -64,6 +65,7 @@ export const TeleprompterView: FC<TeleprompterViewProps> = ({
   targetDurationMinutes,
   initialSpeed,
   initialFontSize,
+  theme,
   onBackToEdit
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -388,11 +390,8 @@ export const TeleprompterView: FC<TeleprompterViewProps> = ({
     .filter((line) => line.length > 0);
 
   return (
-    <div
-      ref={containerRef}
-      className="flex min-h-screen flex-col bg-black text-white"
-    >
-      <main className="relative flex-1 bg-black">
+    <div ref={containerRef} className="flex min-h-screen flex-col">
+      <main className="relative flex-1">
         <div
           ref={scrollRef}
           className="teleprompter-scrollbar relative mx-auto flex h-screen max-w-5xl flex-col overflow-y-scroll px-6 pt-24 pb-40"
@@ -442,6 +441,7 @@ export const TeleprompterView: FC<TeleprompterViewProps> = ({
             progressPercent={progress}
             isFullscreen={isFullscreen}
             isMobile={isMobile}
+            theme={theme}
           />
         </div>
       </main>
