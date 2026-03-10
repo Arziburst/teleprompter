@@ -340,9 +340,10 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
           <button
             type="button"
             onClick={onToggleFullscreen}
+            title={isFullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
             className={`rounded-full border ${borderClass} px-3 py-1.5 text-xs font-medium transition-colors ${btnSecondaryClass}`}
           >
-            {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            {isFullscreen ? "Exit Fullscreen (F)" : "Fullscreen (F)"}
           </button>
         )}
         <button
