@@ -173,6 +173,19 @@ export default function HomePage() {
     setInitialFontSize(40);
   }, []);
 
+  useEffect(() => {
+    if (mode !== "edit") return;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key !== "Enter") return;
+      const target = event.target as HTMLElement | null;
+      if (target?.id === "script" && target?.tagName === "TEXTAREA") return;
+      event.preventDefault();
+      handleStart();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [mode, handleStart]);
+
   if (!bootstrapped) {
     return (
       <div className="flex min-h-screen flex-col bg-white text-slate-900">
@@ -396,9 +409,10 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={handleStart}
+                title="Press Enter (when not typing in script) or Ctrl+Enter to start"
                 className="rounded-full bg-emerald-500 px-6 py-2 text-xs font-semibold uppercase tracking-wide text-black shadow-md shadow-emerald-500/40 transition hover:bg-emerald-400"
               >
-                Start teleprompter
+                Start teleprompter (Enter)
               </button>
             </div>
           </div>
