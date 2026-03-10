@@ -1,4 +1,7 @@
+"use client";
+
 import { type FC, useEffect, useRef, useState } from "react";
+import { formatTime } from "@/lib/format";
 
 type TeleprompterControlsProps = {
   isPlaying: boolean;
@@ -47,15 +50,6 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
   isMobile,
   theme
 }) => {
-  const formatTime = (seconds: number) => {
-    const safe = Math.max(0, Math.floor(seconds));
-    const m = Math.floor(safe / 60);
-    const s = safe % 60;
-    const mm = m.toString().padStart(2, "0");
-    const ss = s.toString().padStart(2, "0");
-    return `${mm}:${ss}`;
-  };
-
   const totalSeconds = elapsedSeconds + remainingSeconds;
   const [hoverPercent, setHoverPercent] = useState<number | null>(null);
   const [isSeeking, setIsSeeking] = useState(false);
@@ -75,34 +69,24 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
     const ratio = Math.min(1, Math.max(0, x / rect.width));
     const percent = ratio * 100;
     setHoverPercent(percent);
-    if (commit) {
-      onSeekByPercent(percent);
-    }
+    if (commit) onSeekByPercent(percent);
   };
 
   useEffect(() => {
-    if (!isSeeking || !barRef.current) {
-      return;
-    }
-
+    if (!isSeeking || !barRef.current) return;
     const target = barRef.current;
-
-    const handleMove = (event: MouseEvent) => {
-      handleSeekFromClientX(event.clientX, target, true);
-    };
-
-    const handleUp = (event: MouseEvent) => {
-      handleSeekFromClientX(event.clientX, target, true);
+    const handleMove = (e: MouseEvent) =>
+      handleSeekFromClientX(e.clientX, target, true);
+    const handleUp = (e: MouseEvent) => {
+      handleSeekFromClientX(e.clientX, target, true);
       setIsSeeking(false);
       onSeekEnd();
       setHoverPercent(null);
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseup", handleUp);
     };
-
     window.addEventListener("mousemove", handleMove);
     window.addEventListener("mouseup", handleUp);
-
     return () => {
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseup", handleUp);
@@ -110,18 +94,13 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
   }, [isSeeking, onSeekEnd]);
 
   useEffect(() => {
-    if (!isSeeking || !barRef.current) {
-      return;
-    }
-
+    if (!isSeeking || !barRef.current) return;
     const target = barRef.current;
-
-    const handleTouchMove = (event: TouchEvent) => {
-      const touch = event.touches[0];
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
       if (!touch) return;
       handleSeekFromClientX(touch.clientX, target, true);
     };
-
     const handleTouchEnd = () => {
       setIsSeeking(false);
       onSeekEnd();
@@ -130,11 +109,9 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
       window.removeEventListener("touchend", handleTouchEnd);
       window.removeEventListener("touchcancel", handleTouchEnd);
     };
-
     window.addEventListener("touchmove", handleTouchMove);
     window.addEventListener("touchend", handleTouchEnd);
     window.addEventListener("touchcancel", handleTouchEnd);
-
     return () => {
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
@@ -146,7 +123,6 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
     theme === "dark"
       ? "bg-black/80 text-slate-50"
       : "bg-white/95 text-slate-900 shadow-slate-300/70";
-
   const isLight = theme === "light";
   const timeClass = isLight ? "text-slate-700" : "text-slate-300";
   const barTrackClass = isLight ? "bg-slate-300" : "bg-slate-800";
@@ -168,77 +144,51 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
           <div
             ref={barRef}
             className={`h-1.5 w-full cursor-pointer overflow-hidden rounded-full ${barTrackClass}`}
-          onMouseDown={(event) => {
-            setIsSeeking(true);
-            onSeekStart();
-            handleSeekFromClientX(
-              event.clientX,
-              event.currentTarget,
-              true
-            );
-          }}
-          onMouseMove={(event) => {
-            if (!isSeeking) {
-              handleSeekFromClientX(
-                event.clientX,
-                event.currentTarget,
-                false
-              );
-              return;
-            }
-            handleSeekFromClientX(
-              event.clientX,
-              event.currentTarget,
-              true
-            );
-          }}
-          onMouseUp={(event) => {
-            if (isSeeking) {
-              handleSeekFromClientX(
-                event.clientX,
-                event.currentTarget,
-                true
-              );
-            }
-            setIsSeeking(false);
-            onSeekEnd();
-            setHoverPercent(null);
-          }}
-          onMouseLeave={() => {
-            if (!isSeeking) {
+            onMouseDown={(e) => {
+              setIsSeeking(true);
+              onSeekStart();
+              handleSeekFromClientX(e.clientX, e.currentTarget, true);
+            }}
+            onMouseMove={(e) => {
+              if (!isSeeking) {
+                handleSeekFromClientX(e.clientX, e.currentTarget, false);
+                return;
+              }
+              handleSeekFromClientX(e.clientX, e.currentTarget, true);
+            }}
+            onMouseUp={(e) => {
+              if (isSeeking) {
+                handleSeekFromClientX(e.clientX, e.currentTarget, true);
+              }
+              setIsSeeking(false);
+              onSeekEnd();
               setHoverPercent(null);
-            }
-          }}
-          onTouchStart={(event) => {
-            const touch = event.touches[0];
-            if (!touch) return;
-            setIsSeeking(true);
-            onSeekStart();
-            handleSeekFromClientX(
-              touch.clientX,
-              event.currentTarget,
-              true
-            );
-          }}
-          onTouchMove={(event) => {
-            const touch = event.touches[0];
-            if (!touch) return;
-            handleSeekFromClientX(
-              touch.clientX,
-              event.currentTarget,
-              true
-            );
-          }}
-          onTouchEnd={() => {
-            setIsSeeking(false);
-            onSeekEnd();
-            setHoverPercent(null);
-          }}
-        >
-          <div
-            className="h-full rounded-full bg-emerald-400 transition-[width]"
-            style={{ width: `${progressPercent}%` }}
-          />
+            }}
+            onMouseLeave={() => {
+              if (!isSeeking) setHoverPercent(null);
+            }}
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              if (!touch) return;
+              setIsSeeking(true);
+              onSeekStart();
+              handleSeekFromClientX(touch.clientX, e.currentTarget, true);
+            }}
+            onTouchMove={(e) => {
+              const touch = e.touches[0];
+              if (!touch) return;
+              handleSeekFromClientX(touch.clientX, e.currentTarget, true);
+            }}
+            onTouchEnd={() => {
+              setIsSeeking(false);
+              onSeekEnd();
+              setHoverPercent(null);
+            }}
+          >
+            <div
+              className="h-full rounded-full bg-emerald-400 transition-[width]"
+              style={{ width: `${progressPercent}%` }}
+            />
           </div>
           {hoverPercent != null && (
             <div
@@ -275,7 +225,9 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
               ? "Pause (Space)"
               : "Start (Space)"}
         </button>
-        <div className={`flex items-center overflow-hidden rounded-full border ${borderClass}`}>
+        <div
+          className={`flex items-center overflow-hidden rounded-full border ${borderClass}`}
+        >
           <button
             type="button"
             onClick={() => onNudgeBySeconds(-nudgeSeconds)}
@@ -291,7 +243,9 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
             → 1s
           </button>
         </div>
-        <div className={`flex items-center overflow-hidden rounded-full border ${borderClass}`}>
+        <div
+          className={`flex items-center overflow-hidden rounded-full border ${borderClass}`}
+        >
           <button
             type="button"
             onClick={onSlower}
@@ -299,7 +253,9 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
           >
             {isMobile ? "Slower" : "Slower (↓)"}
           </button>
-          <span className={`min-w-[2.75rem] px-2 text-center text-[11px] font-semibold ${labelClass}`}>
+          <span
+            className={`min-w-[2.75rem] px-2 text-center text-[11px] font-semibold ${labelClass}`}
+          >
             {speed.toFixed(1)}x
           </span>
           <button
@@ -310,7 +266,9 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
             {isMobile ? "Faster" : "Faster (↑)"}
           </button>
         </div>
-        <div className={`flex items-center overflow-hidden rounded-full border ${borderClass}`}>
+        <div
+          className={`flex items-center overflow-hidden rounded-full border ${borderClass}`}
+        >
           <button
             type="button"
             onClick={onDecreaseFont}
@@ -318,7 +276,9 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
           >
             {isMobile ? "A-" : "A- (-)"}
           </button>
-          <span className={`min-w-[2rem] px-2 text-center text-[11px] font-semibold ${labelClass}`}>
+          <span
+            className={`min-w-[2rem] px-2 text-center text-[11px] font-semibold ${labelClass}`}
+          >
             {Math.round(fontSize)}
           </span>
           <button
@@ -357,4 +317,3 @@ export const TeleprompterControls: FC<TeleprompterControlsProps> = ({
     </div>
   );
 };
-

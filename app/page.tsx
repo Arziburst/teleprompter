@@ -1,162 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useHotkey } from "@tanstack/react-hotkeys";
-import { TeleprompterView } from "../components/TeleprompterView";
+import { useTeleprompterSettings } from "@/hooks/useTeleprompterSettings";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { EditorView } from "@/components/editor/EditorView";
+import { TeleprompterView } from "@/components/teleprompter/TeleprompterView";
 
 type Mode = "edit" | "teleprompter";
 
-const DEFAULT_PLACEHOLDER = `This is a simple teleprompter made for practice interviews, talks, and short videos.
-
-At the top you write or paste your script. The app estimates how long it will take to read and shows that time below.
-
-You can change the target time, playback speed, and font size before you start. These settings are saved in your browser so they are still here next time.
-
-When you press “Start teleprompter”, the text fills the screen and begins to scroll automatically. The progress bar at the bottom shows how much time is left.
-
-During reading you can pause, nudge the position by one second, slow down or speed up the scroll, and adjust the font size without leaving teleprompter mode.
-
-When you are done, you can exit back to the editor, tweak the script or settings, and start another run.`;
-
 export default function HomePage() {
   const [mode, setMode] = useState<Mode>("edit");
-  const [text, setText] = useState<string>("");
-  const [targetDurationMinutes, setTargetDurationMinutes] = useState<number>(3);
-  const [initialSpeed, setInitialSpeed] = useState<number>(1);
-  const [initialFontSize, setInitialFontSize] = useState<number>(40);
-  const [durationTouched, setDurationTouched] = useState<boolean>(false);
-  const [theme, setTheme] = useState<"dark" | "light">("light");
-  const [bootstrapped, setBootstrapped] = useState<boolean>(false);
-  const handleClearText = useCallback(() => {
-    setText("");
-    setDurationTouched(false);
-  }, []);
-
-  useEffect(() => {
-    let handledFromSettings = false;
-
-    const storedSettings = window.localStorage.getItem(
-      "teleprompter-settings"
-    );
-
-    if (storedSettings) {
-      try {
-        const parsed = JSON.parse(storedSettings) as {
-          text?: string;
-          durationMinutes?: number;
-          speed?: number;
-          fontSize?: number;
-          theme?: "dark" | "light";
-        };
-        if (parsed.text && parsed.text.length > 0) {
-          setText(parsed.text);
-        } else {
-          setText(DEFAULT_PLACEHOLDER);
-        }
-        if (
-          typeof parsed.durationMinutes === "number" &&
-          Number.isFinite(parsed.durationMinutes)
-        ) {
-          const roundedMinutes =
-            Math.round(parsed.durationMinutes * 2) / 2;
-          setTargetDurationMinutes(
-            Math.min(60, Math.max(0.5, roundedMinutes))
-          );
-          setDurationTouched(true);
-        }
-        if (typeof parsed.speed === "number" && Number.isFinite(parsed.speed)) {
-          setInitialSpeed(Math.min(5, Math.max(0.1, parsed.speed)));
-        }
-        if (
-          typeof parsed.fontSize === "number" &&
-          Number.isFinite(parsed.fontSize)
-        ) {
-          setInitialFontSize(
-            Math.min(96, Math.max(20, Math.round(parsed.fontSize)))
-          );
-        }
-        if (parsed.theme === "light" || parsed.theme === "dark") {
-          setTheme(parsed.theme);
-        }
-        handledFromSettings = true;
-      } catch {
-        // fall through to legacy keys
-      }
-    }
-
-    if (!handledFromSettings) {
-      const legacyText = window.localStorage.getItem("teleprompter-text");
-      const legacyDuration = window.localStorage.getItem(
-        "teleprompter-duration-minutes"
-      );
-
-      if (legacyText && legacyText.length > 0) {
-        setText(legacyText);
-      } else {
-        setText(DEFAULT_PLACEHOLDER);
-      }
-
-      if (legacyDuration) {
-        const parsedDuration = Number.parseFloat(legacyDuration);
-        if (Number.isFinite(parsedDuration)) {
-          const roundedMinutes = Math.round(parsedDuration * 2) / 2;
-          setTargetDurationMinutes(
-            Math.min(60, Math.max(0.5, roundedMinutes))
-          );
-          setDurationTouched(true);
-        }
-      }
-    }
-
-    setBootstrapped(true);
-  }, []);
-
-  useEffect(() => {
-    const settings = {
-      text,
-      durationMinutes: targetDurationMinutes,
-      speed: initialSpeed,
-      fontSize: initialFontSize,
-      theme
-    };
-    window.localStorage.setItem(
-      "teleprompter-settings",
-      JSON.stringify(settings)
-    );
-  }, [text, targetDurationMinutes, initialSpeed, initialFontSize, theme]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const body = window.document.body;
-    body.classList.remove("theme-dark", "theme-light");
-    body.classList.add(theme === "light" ? "theme-light" : "theme-dark");
-  }, [theme]);
-
-  useEffect(() => {
-    if (durationTouched) {
-      return;
-    }
-    const trimmed = text.trim();
-    if (!trimmed) {
-      return;
-    }
-    const words = trimmed
-      .split(/\s+/)
-      .map((word) => word.trim())
-      .filter((word) => word.length > 0);
-
-    if (words.length === 0) {
-      return;
-    }
-
-    const averageWordsPerMinute = 140;
-    const minutes = words.length / averageWordsPerMinute;
-    const roundedMinutes = Math.round(minutes * 2) / 2;
-    const clampedMinutes = Math.min(60, Math.max(0.5, roundedMinutes));
-    setTargetDurationMinutes(clampedMinutes);
-  }, [text, durationTouched]);
+  const {
+    text,
+    setText,
+    targetDurationMinutes,
+    setTargetDurationMinutes,
+    initialSpeed,
+    setInitialSpeed,
+    initialFontSize,
+    setInitialFontSize,
+    durationTouched,
+    setDurationTouched,
+    theme,
+    setTheme,
+    bootstrapped,
+    handleClearText,
+    handleResetSettings
+  } = useTeleprompterSettings();
 
   const handleStart = useCallback(() => {
     if (!text.trim()) return;
@@ -165,13 +36,6 @@ export default function HomePage() {
 
   const handleBackToEdit = useCallback(() => {
     setMode("edit");
-  }, []);
-
-  const handleResetSettings = useCallback(() => {
-    setText(DEFAULT_PLACEHOLDER);
-    setDurationTouched(false);
-    setInitialSpeed(1);
-    setInitialFontSize(40);
   }, []);
 
   useHotkey(
@@ -192,18 +56,7 @@ export default function HomePage() {
   );
 
   if (!bootstrapped) {
-    return (
-      <div className="flex min-h-screen flex-col bg-white text-slate-900">
-        <main className="mx-auto flex w-full max-w-5xl flex-1 items-center justify-center px-4 py-10">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-500" />
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-              Loading teleprompter…
-            </p>
-          </div>
-        </main>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (mode === "teleprompter") {
@@ -220,208 +73,21 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex min-h-screen min-h-[100dvh] flex-col">
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-4 sm:py-6 md:py-10 min-h-0">
-        <header className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between md:mb-8">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
-              Minimal Teleprompter
-            </h1>
-            <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">
-              Paste your script, press Start, and read comfortably.
-            </p>
-          </div>
-          <div
-            className={`flex w-fit items-center overflow-hidden rounded-full border text-xs transition-colors ${
-              theme === "dark" ? "border-slate-700" : "border-slate-300"
-            }`}
-          >
-            <button
-              type="button"
-              onClick={() => setTheme("dark")}
-              className={`px-3 py-1.5 font-medium transition-colors ${
-                theme === "dark"
-                  ? "bg-slate-900 text-slate-100"
-                  : theme === "light"
-                    ? "bg-transparent text-slate-900 hover:text-emerald-600"
-                    : "bg-transparent text-slate-400 hover:text-emerald-500"
-              }`}
-            >
-              Dark
-            </button>
-            <button
-              type="button"
-              onClick={() => setTheme("light")}
-              className={`border-l px-3 py-1.5 font-medium transition-colors ${
-                theme === "dark" ? "border-slate-700" : "border-slate-300"
-              } ${
-                theme === "light"
-                  ? "bg-slate-200 text-slate-900"
-                  : "bg-transparent text-slate-400 hover:text-emerald-500"
-              }`}
-            >
-              Light
-            </button>
-          </div>
-        </header>
-
-        <section className="flex min-h-0 flex-1 flex-col">
-          <div
-            className={`flex min-h-0 flex-1 flex-col rounded-2xl border p-3 shadow-xl sm:p-6 ${
-              theme === "dark"
-                ? "border-slate-800 bg-slate-900/60 shadow-black/40"
-                : "border-slate-200 bg-white shadow-slate-200/80"
-            }`}
-          >
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <label
-                htmlFor="script"
-                className="shrink-0 text-xs font-medium uppercase tracking-wide text-slate-400"
-              >
-                Script text
-              </label>
-              <button
-                type="button"
-                onClick={handleClearText}
-                className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors sm:px-3 ${
-                  theme === "dark"
-                    ? "border-slate-700 text-slate-200 hover:bg-slate-900"
-                    : "border-slate-300 text-slate-900 hover:text-emerald-600 hover:bg-emerald-50/80"
-                }`}
-              >
-                Clear text
-              </button>
-            </div>
-            <textarea
-              id="script"
-              className={`min-h-[180px] flex-1 resize-none rounded-xl border px-3 py-3 text-sm shadow-inner outline-none ring-0 focus:border-emerald-500 focus:outline-none sm:min-h-[260px] ${
-                theme === "dark"
-                  ? "border-slate-800 bg-slate-950/80 text-slate-50 shadow-black/60"
-                  : "border-slate-300 bg-slate-50 text-slate-900 shadow-slate-200"
-              }`}
-              value={text}
-              onChange={(event) => setText(event.target.value)}
-              placeholder={DEFAULT_PLACEHOLDER}
-            />
-            <div
-              className={`mt-3 flex flex-col gap-3 rounded-xl border px-3 py-3 text-xs sm:mt-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 ${
-                theme === "dark"
-                  ? "border-slate-800 bg-slate-950/70 text-slate-400"
-                  : "border-slate-200 bg-slate-100 text-slate-600"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <label
-                  htmlFor="duration"
-                  className="w-32 shrink-0 font-medium uppercase tracking-wide sm:w-auto"
-                >
-                  Estimated read time
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    id="duration"
-                    type="number"
-                    min={0.5}
-                    max={60}
-                    step={0.5}
-                    value={targetDurationMinutes}
-                    onChange={(event) => {
-                      const value = Number.parseFloat(event.target.value);
-                      if (!Number.isFinite(value)) return;
-                      setDurationTouched(true);
-                      setTargetDurationMinutes(
-                        Math.min(60, Math.max(0.5, value))
-                      );
-                    }}
-                    className={`w-16 rounded-lg border px-2 py-1.5 text-xs outline-none focus:border-emerald-500 sm:w-20 ${
-                      theme === "dark"
-                        ? "border-slate-700 bg-slate-900 text-slate-50"
-                        : "border-slate-300 bg-white text-slate-900"
-                    }`}
-                  />
-                  <span>min</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <label
-                  htmlFor="initial-speed"
-                  className="w-32 shrink-0 font-medium uppercase tracking-wide sm:w-auto"
-                >
-                  Initial speed
-                </label>
-                <input
-                  id="initial-speed"
-                  type="number"
-                  min={0.1}
-                  max={5}
-                  step={0.1}
-                  value={initialSpeed.toFixed(1)}
-                  onChange={(event) => {
-                    const value = Number.parseFloat(event.target.value);
-                    if (!Number.isFinite(value)) return;
-                    setInitialSpeed(Math.min(5, Math.max(0.1, value)));
-                  }}
-                  className={`w-16 rounded-lg border px-2 py-1.5 text-xs outline-none focus:border-emerald-500 sm:w-20 ${
-                    theme === "dark"
-                      ? "border-slate-700 bg-slate-900 text-slate-50"
-                      : "border-slate-300 bg-white text-slate-900"
-                  }`}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <label
-                  htmlFor="initial-font"
-                  className="w-32 shrink-0 font-medium uppercase tracking-wide sm:w-auto"
-                >
-                  Initial font
-                </label>
-                <input
-                  id="initial-font"
-                  type="number"
-                  min={20}
-                  max={96}
-                  step={2}
-                  value={initialFontSize}
-                  onChange={(event) => {
-                    const value = Number.parseFloat(event.target.value);
-                    if (!Number.isFinite(value)) return;
-                    setInitialFontSize(
-                      Math.min(96, Math.max(20, Math.round(value)))
-                    );
-                  }}
-                  className={`w-16 rounded-lg border px-2 py-1.5 text-xs outline-none focus:border-emerald-500 sm:w-20 ${
-                    theme === "dark"
-                      ? "border-slate-700 bg-slate-900 text-slate-50"
-                      : "border-slate-300 bg-white text-slate-900"
-                  }`}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleResetSettings}
-                className={`w-full rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors sm:ml-auto sm:w-auto ${
-                  theme === "dark"
-                    ? "border-slate-700 text-slate-200 hover:bg-slate-900"
-                    : "border-slate-300 text-slate-900 hover:text-emerald-600 hover:bg-emerald-50/80"
-                }`}
-              >
-                Reset to initial
-              </button>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center justify-end gap-3 sm:mt-4">
-              <button
-                type="button"
-                onClick={handleStart}
-                title="Press Enter (when not typing in script) or Ctrl+Enter to start"
-                className="w-full rounded-full bg-emerald-500 px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-black shadow-md shadow-emerald-500/40 transition hover:bg-emerald-400 sm:w-auto sm:py-2"
-              >
-                Start teleprompter (Enter)
-              </button>
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
+    <EditorView
+      theme={theme}
+      onThemeChange={setTheme}
+      text={text}
+      onTextChange={setText}
+      onClearText={handleClearText}
+      targetDurationMinutes={targetDurationMinutes}
+      onDurationChange={setTargetDurationMinutes}
+      onDurationTouch={() => setDurationTouched(true)}
+      initialSpeed={initialSpeed}
+      onSpeedChange={setInitialSpeed}
+      initialFontSize={initialFontSize}
+      onFontSizeChange={setInitialFontSize}
+      onResetSettings={handleResetSettings}
+      onStart={handleStart}
+    />
   );
 }
-
