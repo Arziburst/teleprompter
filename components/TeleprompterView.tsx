@@ -68,6 +68,7 @@ export const TeleprompterView: FC<TeleprompterViewProps> = ({
   theme,
   onBackToEdit
 }) => {
+  const isDark = theme === "dark";
   const containerRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
@@ -390,11 +391,18 @@ export const TeleprompterView: FC<TeleprompterViewProps> = ({
     .filter((line) => line.length > 0);
 
   return (
-    <div ref={containerRef} className="flex min-h-screen flex-col">
+    <div
+      ref={containerRef}
+      className={`flex min-h-screen flex-col ${
+        isDark ? "bg-black text-slate-100" : "bg-white text-slate-900"
+      }`}
+    >
       <main className="relative flex-1">
         <div
           ref={scrollRef}
-          className="teleprompter-scrollbar relative mx-auto flex h-screen max-w-5xl flex-col overflow-y-scroll px-6 pt-24 pb-40"
+          className={`teleprompter-scrollbar relative mx-auto flex h-screen max-w-5xl flex-col overflow-y-scroll px-6 pt-24 pb-40 ${
+            isDark ? "bg-black" : "bg-white"
+          }`}
           onClick={() => {
             setIsPlaying((prev) => !prev);
           }}
