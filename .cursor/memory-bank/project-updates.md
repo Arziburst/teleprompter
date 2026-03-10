@@ -13,4 +13,5 @@
 - Added client-side bootstrap loader: while settings are read from localStorage, show a full-screen white loading screen with centered spinner and neutral text, independent of theme.
 - Updated default placeholder script to a ~1 minute English description of the app features; added \"Clear text\" button in the editor header that wipes the textarea with outlined styling similar to Reset, and made \"Reset to initial\" restore the original placeholder text and base settings; removed the local-storage helper text under the controls row.
 - Teleprompter fullscreen view now applies theme-aware backgrounds directly: dark theme uses black background, light theme uses white, so fullscreen in light theme no longer appears dark.
+- All keyboard bindings refactored from window addEventListener to @tanstack/react-hotkeys: HotkeysProvider in layout; page.tsx uses useHotkey for Enter and Mod+Enter to start; TeleprompterView uses useHotkey for Space, arrows, +/=, -/_, r/R, f/F, Escape (play/pause, speed, nudge, font, reset, fullscreen, back).
 

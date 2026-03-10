@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useHotkey } from "@tanstack/react-hotkeys";
 import { TeleprompterView } from "../components/TeleprompterView";
 
 type Mode = "edit" | "teleprompter";
@@ -173,18 +174,22 @@ export default function HomePage() {
     setInitialFontSize(40);
   }, []);
 
-  useEffect(() => {
-    if (mode !== "edit") return;
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key !== "Enter") return;
-      const target = event.target as HTMLElement | null;
-      if (target?.id === "script" && target?.tagName === "TEXTAREA") return;
-      event.preventDefault();
+  useHotkey(
+    "Enter",
+    (e) => {
+      e.preventDefault();
       handleStart();
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [mode, handleStart]);
+    },
+    { enabled: mode === "edit" }
+  );
+  useHotkey(
+    "Mod+Enter",
+    (e) => {
+      e.preventDefault();
+      handleStart();
+    },
+    { enabled: mode === "edit" }
+  );
 
   if (!bootstrapped) {
     return (
@@ -297,14 +302,6 @@ export default function HomePage() {
               value={text}
               onChange={(event) => setText(event.target.value)}
               placeholder={DEFAULT_PLACEHOLDER}
-              onKeyDown={(event) => {
-                const isCmdOrCtrl =
-                  event.metaKey || event.ctrlKey;
-                if (event.key === "Enter" && isCmdOrCtrl) {
-                  event.preventDefault();
-                  handleStart();
-                }
-              }}
             />
             <div
               className={`mt-3 flex flex-col gap-3 rounded-xl border px-3 py-3 text-xs sm:mt-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 ${

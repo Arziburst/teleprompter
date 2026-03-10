@@ -8,6 +8,7 @@ import {
   type FC,
   type RefObject
 } from "react";
+import { useHotkey } from "@tanstack/react-hotkeys";
 import {
   ChevronDown,
   ChevronLeft,
@@ -375,88 +376,66 @@ export const TeleprompterView: FC<TeleprompterViewProps> = ({
     wasPlayingBeforeSeekRef.current = false;
   }, []);
 
-  useEffect(() => {
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === " " || event.code === "Space") {
-        event.preventDefault();
-        handleTogglePlay();
-        return;
-      }
-
-      if (event.key === "ArrowUp") {
-        event.preventDefault();
-        handleFaster();
-        return;
-      }
-
-      if (event.key === "ArrowDown") {
-        event.preventDefault();
-        handleSlower();
-        return;
-      }
-
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        handleNudgeBySeconds(-1);
-        return;
-      }
-
-      if (event.key === "ArrowRight") {
-        event.preventDefault();
-        handleNudgeBySeconds(1);
-        return;
-      }
-
-      if (event.key === "+" || event.key === "=") {
-        event.preventDefault();
-        handleIncreaseFont();
-        return;
-      }
-
-      if (event.key === "-" || event.key === "_") {
-        event.preventDefault();
-        handleDecreaseFont();
-        return;
-      }
-
-      if (event.key === "r" || event.key === "R") {
-        event.preventDefault();
-        handleResetAndStart();
-        return;
-      }
-
-      if (event.key === "f" || event.key === "F") {
-        event.preventDefault();
-        void handleFullscreen();
-        return;
-      }
-
-      if (event.key === "Escape") {
-        event.preventDefault();
-        if (document.fullscreenElement) {
-          document.exitFullscreen().then(() => showFlash("fullscreen-exit"));
-        } else {
-          onBackToEdit();
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKey);
-    return () => {
-      window.removeEventListener("keydown", handleKey);
-    };
-  }, [
-    handleTogglePlay,
-    handleFaster,
-    handleSlower,
-    handleIncreaseFont,
-    handleDecreaseFont,
-    handleResetAndStart,
-    handleNudgeBySeconds,
-    handleFullscreen,
-    showFlash,
-    onBackToEdit
-  ]);
+  useHotkey({ key: "Space" }, (e) => {
+    e.preventDefault();
+    handleTogglePlay();
+  });
+  useHotkey("ArrowUp", (e) => {
+    e.preventDefault();
+    handleFaster();
+  });
+  useHotkey("ArrowDown", (e) => {
+    e.preventDefault();
+    handleSlower();
+  });
+  useHotkey("ArrowLeft", (e) => {
+    e.preventDefault();
+    handleNudgeBySeconds(-1);
+  });
+  useHotkey("ArrowRight", (e) => {
+    e.preventDefault();
+    handleNudgeBySeconds(1);
+  });
+  useHotkey({ key: "+" }, (e) => {
+    e.preventDefault();
+    handleIncreaseFont();
+  });
+  useHotkey("=", (e) => {
+    e.preventDefault();
+    handleIncreaseFont();
+  });
+  useHotkey("-", (e) => {
+    e.preventDefault();
+    handleDecreaseFont();
+  });
+  useHotkey({ key: "_" }, (e) => {
+    e.preventDefault();
+    handleDecreaseFont();
+  });
+  useHotkey({ key: "r" }, (e) => {
+    e.preventDefault();
+    handleResetAndStart();
+  });
+  useHotkey("R", (e) => {
+    e.preventDefault();
+    handleResetAndStart();
+  });
+  useHotkey({ key: "f" }, (e) => {
+    e.preventDefault();
+    void handleFullscreen();
+  });
+  useHotkey("F", (e) => {
+    e.preventDefault();
+    void handleFullscreen();
+  });
+  useHotkey("Escape", (e) => {
+    e.preventDefault();
+    if (document.fullscreenElement) {
+      document.exitFullscreen().then(() => showFlash("fullscreen-exit"));
+    } else {
+      onBackToEdit();
+    }
+  });
 
   useEffect(() => {
     handleResetPosition();
