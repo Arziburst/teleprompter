@@ -215,19 +215,19 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-10">
-        <header className="mb-8 flex items-center justify-between gap-4">
+    <div className="flex min-h-screen min-h-[100dvh] flex-col">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-4 sm:py-6 md:py-10 min-h-0">
+        <header className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between md:mb-8">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
               Minimal Teleprompter
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">
               Paste your script, press Start, and read comfortably.
             </p>
           </div>
           <div
-            className={`flex items-center overflow-hidden rounded-full border text-xs transition-colors ${
+            className={`flex w-fit items-center overflow-hidden rounded-full border text-xs transition-colors ${
               theme === "dark" ? "border-slate-700" : "border-slate-300"
             }`}
           >
@@ -260,25 +260,25 @@ export default function HomePage() {
           </div>
         </header>
 
-        <section className="flex-1">
+        <section className="flex min-h-0 flex-1 flex-col">
           <div
-            className={`flex h-full flex-col rounded-2xl border p-4 shadow-xl sm:p-6 ${
+            className={`flex min-h-0 flex-1 flex-col rounded-2xl border p-3 shadow-xl sm:p-6 ${
               theme === "dark"
                 ? "border-slate-800 bg-slate-900/60 shadow-black/40"
                 : "border-slate-200 bg-white shadow-slate-200/80"
             }`}
           >
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex items-center justify-between gap-2">
               <label
                 htmlFor="script"
-                className="text-xs font-medium uppercase tracking-wide text-slate-400"
+                className="shrink-0 text-xs font-medium uppercase tracking-wide text-slate-400"
               >
                 Script text
               </label>
               <button
                 type="button"
                 onClick={handleClearText}
-                className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
+                className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors sm:px-3 ${
                   theme === "dark"
                     ? "border-slate-700 text-slate-200 hover:bg-slate-900"
                     : "border-slate-300 text-slate-900 hover:text-emerald-600 hover:bg-emerald-50/80"
@@ -289,7 +289,7 @@ export default function HomePage() {
             </div>
             <textarea
               id="script"
-              className={`min-h-[260px] flex-1 resize-none rounded-xl border px-3 py-3 text-sm shadow-inner outline-none ring-0 focus:border-emerald-500 focus:outline-none ${
+              className={`min-h-[180px] flex-1 resize-none rounded-xl border px-3 py-3 text-sm shadow-inner outline-none ring-0 focus:border-emerald-500 focus:outline-none sm:min-h-[260px] ${
                 theme === "dark"
                   ? "border-slate-800 bg-slate-950/80 text-slate-50 shadow-black/60"
                   : "border-slate-300 bg-slate-50 text-slate-900 shadow-slate-200"
@@ -307,96 +307,102 @@ export default function HomePage() {
               }}
             />
             <div
-              className={`mt-4 flex flex-wrap items-center gap-3 rounded-xl border px-3 py-3 text-xs ${
+              className={`mt-3 flex flex-col gap-3 rounded-xl border px-3 py-3 text-xs sm:mt-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 ${
                 theme === "dark"
                   ? "border-slate-800 bg-slate-950/70 text-slate-400"
                   : "border-slate-200 bg-slate-100 text-slate-600"
               }`}
             >
-              <label
-                htmlFor="duration"
-                className="font-medium uppercase tracking-wide"
-              >
-                Estimated read time
-              </label>
               <div className="flex items-center gap-2">
+                <label
+                  htmlFor="duration"
+                  className="w-32 shrink-0 font-medium uppercase tracking-wide sm:w-auto"
+                >
+                  Estimated read time
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="duration"
+                    type="number"
+                    min={0.5}
+                    max={60}
+                    step={0.5}
+                    value={targetDurationMinutes}
+                    onChange={(event) => {
+                      const value = Number.parseFloat(event.target.value);
+                      if (!Number.isFinite(value)) return;
+                      setDurationTouched(true);
+                      setTargetDurationMinutes(
+                        Math.min(60, Math.max(0.5, value))
+                      );
+                    }}
+                    className={`w-16 rounded-lg border px-2 py-1.5 text-xs outline-none focus:border-emerald-500 sm:w-20 ${
+                      theme === "dark"
+                        ? "border-slate-700 bg-slate-900 text-slate-50"
+                        : "border-slate-300 bg-white text-slate-900"
+                    }`}
+                  />
+                  <span>min</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="initial-speed"
+                  className="w-32 shrink-0 font-medium uppercase tracking-wide sm:w-auto"
+                >
+                  Initial speed
+                </label>
                 <input
-                  id="duration"
+                  id="initial-speed"
                   type="number"
-                  min={0.5}
-                  max={60}
-                  step={0.5}
-                  value={targetDurationMinutes}
+                  min={0.1}
+                  max={5}
+                  step={0.1}
+                  value={initialSpeed.toFixed(1)}
                   onChange={(event) => {
                     const value = Number.parseFloat(event.target.value);
                     if (!Number.isFinite(value)) return;
-                    setDurationTouched(true);
-                    setTargetDurationMinutes(
-                      Math.min(60, Math.max(0.5, value))
-                    );
+                    setInitialSpeed(Math.min(5, Math.max(0.1, value)));
                   }}
-                  className={`w-20 rounded-lg border px-2 py-1.5 text-xs outline-none focus:border-emerald-500 ${
+                  className={`w-16 rounded-lg border px-2 py-1.5 text-xs outline-none focus:border-emerald-500 sm:w-20 ${
                     theme === "dark"
                       ? "border-slate-700 bg-slate-900 text-slate-50"
                       : "border-slate-300 bg-white text-slate-900"
                   }`}
                 />
-                <span>min</span>
               </div>
-              <label
-                htmlFor="initial-speed"
-                className="font-medium uppercase tracking-wide"
-              >
-                Initial speed
-              </label>
-              <input
-                id="initial-speed"
-                type="number"
-                min={0.1}
-                max={5}
-                step={0.1}
-                value={initialSpeed.toFixed(1)}
-                onChange={(event) => {
-                  const value = Number.parseFloat(event.target.value);
-                  if (!Number.isFinite(value)) return;
-                  setInitialSpeed(Math.min(5, Math.max(0.1, value)));
-                }}
-                className={`w-20 rounded-lg border px-2 py-1.5 text-xs outline-none focus:border-emerald-500 ${
-                  theme === "dark"
-                    ? "border-slate-700 bg-slate-900 text-slate-50"
-                    : "border-slate-300 bg-white text-slate-900"
-                }`}
-              />
-              <label
-                htmlFor="initial-font"
-                className="font-medium uppercase tracking-wide"
-              >
-                Initial font
-              </label>
-              <input
-                id="initial-font"
-                type="number"
-                min={20}
-                max={96}
-                step={2}
-                value={initialFontSize}
-                onChange={(event) => {
-                  const value = Number.parseFloat(event.target.value);
-                  if (!Number.isFinite(value)) return;
-                  setInitialFontSize(
-                    Math.min(96, Math.max(20, Math.round(value)))
-                  );
-                }}
-                className={`w-20 rounded-lg border px-2 py-1.5 text-xs outline-none focus:border-emerald-500 ${
-                  theme === "dark"
-                    ? "border-slate-700 bg-slate-900 text-slate-50"
-                    : "border-slate-300 bg-white text-slate-900"
-                }`}
-              />
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="initial-font"
+                  className="w-32 shrink-0 font-medium uppercase tracking-wide sm:w-auto"
+                >
+                  Initial font
+                </label>
+                <input
+                  id="initial-font"
+                  type="number"
+                  min={20}
+                  max={96}
+                  step={2}
+                  value={initialFontSize}
+                  onChange={(event) => {
+                    const value = Number.parseFloat(event.target.value);
+                    if (!Number.isFinite(value)) return;
+                    setInitialFontSize(
+                      Math.min(96, Math.max(20, Math.round(value)))
+                    );
+                  }}
+                  className={`w-16 rounded-lg border px-2 py-1.5 text-xs outline-none focus:border-emerald-500 sm:w-20 ${
+                    theme === "dark"
+                      ? "border-slate-700 bg-slate-900 text-slate-50"
+                      : "border-slate-300 bg-white text-slate-900"
+                  }`}
+                />
+              </div>
               <button
                 type="button"
                 onClick={handleResetSettings}
-                className={`ml-auto rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors ${
+                className={`w-full rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors sm:ml-auto sm:w-auto ${
                   theme === "dark"
                     ? "border-slate-700 text-slate-200 hover:bg-slate-900"
                     : "border-slate-300 text-slate-900 hover:text-emerald-600 hover:bg-emerald-50/80"
@@ -405,12 +411,12 @@ export default function HomePage() {
                 Reset to initial
               </button>
             </div>
-            <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
+            <div className="mt-3 flex flex-wrap items-center justify-end gap-3 sm:mt-4">
               <button
                 type="button"
                 onClick={handleStart}
                 title="Press Enter (when not typing in script) or Ctrl+Enter to start"
-                className="rounded-full bg-emerald-500 px-6 py-2 text-xs font-semibold uppercase tracking-wide text-black shadow-md shadow-emerald-500/40 transition hover:bg-emerald-400"
+                className="w-full rounded-full bg-emerald-500 px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-black shadow-md shadow-emerald-500/40 transition hover:bg-emerald-400 sm:w-auto sm:py-2"
               >
                 Start teleprompter (Enter)
               </button>
