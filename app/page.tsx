@@ -5,17 +5,17 @@ import { TeleprompterView } from "../components/TeleprompterView";
 
 type Mode = "edit" | "teleprompter";
 
-const DEFAULT_PLACEHOLDER = `Welcome to your minimal teleprompter.
+const DEFAULT_PLACEHOLDER = `This is a simple teleprompter made for practice interviews, talks, and short videos.
 
-Paste or type your script here.
+At the top you write or paste your script. The app estimates how long it will take to read and shows that time below.
 
-Use Ctrl+Enter (or Cmd+Enter) to start teleprompter mode.
+You can change the target time, playback speed, and font size before you start. These settings are saved in your browser so they are still here next time.
 
-While reading:
-- Space pauses and resumes
-- Up / Down arrows adjust speed
-- + / - adjust font size
-- Esc exits fullscreen or returns to edit mode.`;
+When you press “Start teleprompter”, the text fills the screen and begins to scroll automatically. The progress bar at the bottom shows how much time is left.
+
+During reading you can pause, nudge the position by one second, slow down or speed up the scroll, and adjust the font size without leaving teleprompter mode.
+
+When you are done, you can exit back to the editor, tweak the script or settings, and start another run.`;
 
 export default function HomePage() {
   const [mode, setMode] = useState<Mode>("edit");
@@ -24,9 +24,16 @@ export default function HomePage() {
   const [initialSpeed, setInitialSpeed] = useState<number>(1);
   const [initialFontSize, setInitialFontSize] = useState<number>(40);
   const [durationTouched, setDurationTouched] = useState<boolean>(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
+  const [bootstrapped, setBootstrapped] = useState<boolean>(false);
+  const handleClearText = useCallback(() => {
+    setText("");
+    setDurationTouched(false);
+  }, []);
 
   useEffect(() => {
+    let handledFromSettings = false;
+
     const storedSettings = window.localStorage.getItem(
       "teleprompter-settings"
     );
@@ -70,33 +77,37 @@ export default function HomePage() {
         if (parsed.theme === "light" || parsed.theme === "dark") {
           setTheme(parsed.theme);
         }
-        return;
+        handledFromSettings = true;
       } catch {
         // fall through to legacy keys
       }
     }
 
-    const legacyText = window.localStorage.getItem("teleprompter-text");
-    const legacyDuration = window.localStorage.getItem(
-      "teleprompter-duration-minutes"
-    );
+    if (!handledFromSettings) {
+      const legacyText = window.localStorage.getItem("teleprompter-text");
+      const legacyDuration = window.localStorage.getItem(
+        "teleprompter-duration-minutes"
+      );
 
-    if (legacyText && legacyText.length > 0) {
-      setText(legacyText);
-    } else {
-      setText(DEFAULT_PLACEHOLDER);
-    }
+      if (legacyText && legacyText.length > 0) {
+        setText(legacyText);
+      } else {
+        setText(DEFAULT_PLACEHOLDER);
+      }
 
-    if (legacyDuration) {
-      const parsedDuration = Number.parseFloat(legacyDuration);
-      if (Number.isFinite(parsedDuration)) {
-        const roundedMinutes = Math.round(parsedDuration * 2) / 2;
-        setTargetDurationMinutes(
-          Math.min(60, Math.max(0.5, roundedMinutes))
-        );
-        setDurationTouched(true);
+      if (legacyDuration) {
+        const parsedDuration = Number.parseFloat(legacyDuration);
+        if (Number.isFinite(parsedDuration)) {
+          const roundedMinutes = Math.round(parsedDuration * 2) / 2;
+          setTargetDurationMinutes(
+            Math.min(60, Math.max(0.5, roundedMinutes))
+          );
+          setDurationTouched(true);
+        }
       }
     }
+
+    setBootstrapped(true);
   }, []);
 
   useEffect(() => {
@@ -156,10 +167,26 @@ export default function HomePage() {
   }, []);
 
   const handleResetSettings = useCallback(() => {
+    setText(DEFAULT_PLACEHOLDER);
     setDurationTouched(false);
     setInitialSpeed(1);
     setInitialFontSize(40);
   }, []);
+
+  if (!bootstrapped) {
+    return (
+      <div className="flex min-h-screen flex-col bg-white text-slate-900">
+        <main className="mx-auto flex w-full max-w-5xl flex-1 items-center justify-center px-4 py-10">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-500" />
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Loading teleprompter…
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (mode === "teleprompter") {
     return (
@@ -228,12 +255,25 @@ export default function HomePage() {
                 : "border-slate-200 bg-white shadow-slate-200/80"
             }`}
           >
-            <label
-              htmlFor="script"
-              className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400"
-            >
-              Script text
-            </label>
+            <div className="mb-2 flex items-center justify-between">
+              <label
+                htmlFor="script"
+                className="text-xs font-medium uppercase tracking-wide text-slate-400"
+              >
+                Script text
+              </label>
+              <button
+                type="button"
+                onClick={handleClearText}
+                className={`rounded-full border px-3 py-1 text-[11px] font-medium transition-colors ${
+                  theme === "dark"
+                    ? "border-slate-700 text-slate-200 hover:bg-slate-900"
+                    : "border-slate-300 text-slate-900 hover:text-emerald-600 hover:bg-emerald-50/80"
+                }`}
+              >
+                Clear text
+              </button>
+            </div>
             <textarea
               id="script"
               className={`min-h-[260px] flex-1 resize-none rounded-xl border px-3 py-3 text-sm shadow-inner outline-none ring-0 focus:border-emerald-500 focus:outline-none ${
@@ -352,10 +392,7 @@ export default function HomePage() {
                 Reset to initial
               </button>
             </div>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs text-slate-500">
-                Your text is stored locally in this browser.
-              </p>
+            <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={handleStart}
