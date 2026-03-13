@@ -26,7 +26,8 @@ export default function HomePage() {
     setTheme,
     bootstrapped,
     handleClearText,
-    handleResetSettings
+    handleResetSettings,
+    persistPartial
   } = useTeleprompterSettings();
 
   const handleStart = useCallback(() => {
@@ -68,6 +69,7 @@ export default function HomePage() {
         initialFontSize={initialFontSize}
         theme={theme}
         onBackToEdit={handleBackToEdit}
+        onPersistPartial={persistPartial}
       />
     );
   }

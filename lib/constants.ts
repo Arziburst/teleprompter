@@ -10,9 +10,7 @@ During reading you can pause, nudge the position by one second, slow down or spe
 
 When you are done, you can exit back to the editor, tweak the script or settings, and start another run.`;
 
-export const STORAGE_KEY = "teleprompter-settings";
-export const LEGACY_TEXT_KEY = "teleprompter-text";
-export const LEGACY_DURATION_KEY = "teleprompter-duration-minutes";
+export const SUPABASE_SETTINGS_ROW_ID = "default";
 
 export const DURATION_MIN = 0.5;
 export const DURATION_MAX = 60;

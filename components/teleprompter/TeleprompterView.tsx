@@ -16,8 +16,7 @@ import {
   FONT_STEP_TELEPROMPTER,
   SPEED_MIN,
   SPEED_MAX,
-  SPEED_STEP,
-  STORAGE_KEY
+  SPEED_STEP
 } from "@/lib/constants";
 import type { FlashType } from "@/types/teleprompter";
 import { FlashOverlay } from "./FlashOverlay";
@@ -30,6 +29,7 @@ type TeleprompterViewProps = {
   initialFontSize: number;
   theme: "dark" | "light";
   onBackToEdit: () => void;
+  onPersistPartial?: (patch: { speed?: number; font_size?: number }) => void;
 };
 
 export const TeleprompterView: FC<TeleprompterViewProps> = ({
@@ -38,7 +38,8 @@ export const TeleprompterView: FC<TeleprompterViewProps> = ({
   initialSpeed,
   initialFontSize,
   theme,
-  onBackToEdit
+  onBackToEdit,
+  onPersistPartial
 }) => {
   const isDark = theme === "dark";
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -97,19 +98,18 @@ export const TeleprompterView: FC<TeleprompterViewProps> = ({
     return total / targetDurationSeconds;
   }, [targetDurationSeconds]);
 
+  const persistPartialTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      window.localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ ...parsed, speed: speedMultiplier, fontSize })
-      );
-    } catch {
-      // ignore
-    }
-  }, [speedMultiplier, fontSize]);
+    if (typeof window === "undefined" || !onPersistPartial) return;
+    if (persistPartialTimeoutRef.current) clearTimeout(persistPartialTimeoutRef.current);
+    persistPartialTimeoutRef.current = setTimeout(() => {
+      persistPartialTimeoutRef.current = null;
+      onPersistPartial({ speed: speedMultiplier, font_size: fontSize });
+    }, 800);
+    return () => {
+      if (persistPartialTimeoutRef.current) clearTimeout(persistPartialTimeoutRef.current);
+    };
+  }, [speedMultiplier, fontSize, onPersistPartial]);
 
   const updateProgress = useCallback(() => {
     const scroller = scrollRef.current;

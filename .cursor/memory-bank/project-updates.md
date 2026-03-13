@@ -1,5 +1,13 @@
 # Project Updates
 
+## 2026-03-13
+
+- Replaced localStorage with Supabase for teleprompter settings (text, duration, speed, font size, theme). Single row in `public.teleprompter_settings` with `id = 'default'`.
+- Added Supabase Realtime: changes on one device propagate to other open instances (postgres_changes on `teleprompter_settings`).
+- New: `lib/supabase.ts` (client), `supabase/migrations/..._create_teleprompter_settings.sql` (table, RLS, Realtime publication). Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (see `.env.local.example`). If env is missing, app runs with default state and no sync.
+- Hook `useTeleprompterSettings`: loads from Supabase on mount, debounced upsert on state change, Realtime subscription for remote updates; exposes `persistPartial` for saving only speed/font from TeleprompterView (debounced 800ms).
+- Removed all localStorage usage from hooks and TeleprompterView.
+
 ## 2026-03-10
 
 - Added editable estimated read time in the editor screen.
